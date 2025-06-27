@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IoT Dashboard Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #667eea, #764ba2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 14px;
+      width: 320px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      animation: slideUp 0.8s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .iot-icon {
+      font-size: 36px;
+      margin-bottom: 12px;
+      animation: bounce 1.6s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      padding: 12px;
+      width: 60%;
+      font-size: 16px;
+      font-weight: bold;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    #errorMsg {
+      color: red;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .footer-note {
+      color: #fff;
+      font-size: 13px;
+      margin-top: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <form id="loginForm">
+    <div class="iot-icon">📡🌐</div>
+    <h2>Login to IoT Dashboard</h2>
+    <input type="text" id="username" placeholder="👤 Username" required autocomplete="off" />
+    <input type="password" id="password" placeholder="🔑 Password" required autocomplete="off" />
+    <button type="submit">Login</button>
+    <div id="errorMsg"></div>
+  </form>
+
+  <div class="footer-note">🌍 IoT Dashboard Login Page | Built with 💡 by Arjun</div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Default credentials (only if not already saved)
+      if (!localStorage.getItem("username")) {
+        localStorage.setItem("username", "arjun");
+      }
+      if (!localStorage.getItem("password")) {
+        localStorage.setItem("password", "1234");
+      }
+
+      // ✅ Login Handler
+      document.getElementById("loginForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const user = document.getElementById("username").value.trim();
+        const pass = document.getElementById("password").value;
+
+        const savedUser = localStorage.getItem("username");
+        const savedPass = localStorage.getItem("password");
+
+        if (user === savedUser && pass === savedPass) {
+          sessionStorage.setItem("loggedIn", "true");
+          localStorage.setItem("username", user);
+          window.location.href = "dashboard.html";
+        } else {
+          document.getElementById("errorMsg").textContent = "❌ Invalid username or password!";
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IoT Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Poppins&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .button-group button {
+      background-color: #00838f;
+      color: #eff5f2;
+      border: none;
+      padding: 9px 16px;
+      margin: 6px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .button-group button:hover {
+      background-color: #0B0C10;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="avatar" id="avatarLetter" onclick="goToDashboard()">A</div>
+    <div class="menu" onclick="toggleDropdown()">
+      ☰
+      <ul class="dropdown" id="dropdownMenu">
+        <li onclick="changeUsername()">Change Username</li>
+        <li onclick="showChangePassword()">Change Password</li>
+        <li onclick="toggleTheme()">Toggle Theme</li>
+        <li onclick="logout()">Logout</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>🌡️ IoT Dashboard</h1>
+
+    <div class="button-group">
+      <button onclick="fetchData()">🔄 Refresh</button>
+      <button onclick="toggleRealtime()">📡 Toggle Real-Time</button>
+    </div>
+
+    <div class="charts" id="chartsSection" style="display: none;">
+      <div class="chart-card">
+        <h2>Temperature (°C)</h2>
+        <canvas id="tempChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Humidity (%)</h2>
+        <canvas id="humChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ✅ Scrollable wrapper for table -->
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>🌡️ Temperature (°C)</th>
+            <th>💧 Humidity (%)</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal" id="passwordModal">
+    <div class="modal-content">
+      <h3>🔐 Change Password</h3>
+      <input type="text" id="cp-username" placeholder="Username" />
+      <input type="password" id="cp-oldpass" placeholder="Old Password" />
+      <input type="password" id="cp-newpass" placeholder="New Password" />
+      <button onclick="saveNewPassword()">Save Password</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+<script>
+  if (sessionStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "index.html";
+  }
+
+  let darkMode = true;
+  let tempChart, humChart;
+
+  const apiUrl = 'https://qsbw8657yl.execute-api.ap-south-1.amazonaws.com/getIoTData';  // ✅ Your API URL
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const avatar = document.getElementById("avatarLetter");
+    const username = localStorage.getItem("username") || "U";
+    avatar.textContent = username.charAt(0).toUpperCase();
+    const savedTheme = localStorage.getItem("theme");
+    darkMode = savedTheme !== "light";
+    applyTheme();
+
+    tempChart = new Chart(document.getElementById("tempChart"), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Temperature',
+          data: [],
+          borderColor: '#B7410E',
+          backgroundColor: '#A7C7E7',
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    humChart = new Chart(document.getElementById("humChart"), {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Humidity 💧',
+          data: [],
+          borderColor: '#2E003E',
+          backgroundColor: '#EDC9AF',
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+
+    fetchData();
+    setInterval(fetchData, 5000);
+  });
+
+  function fetchData() {
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("dataTable").innerHTML = "";
+        tempChart.data.labels = [];
+        tempChart.data.datasets[0].data = [];
+        humChart.data.labels = [];
+        humChart.data.datasets[0].data = [];
+
+        data.forEach(item => {
+          const time = item.payload.timestamp || 'N/A';
+          const temp = item.payload.temperature || 0;
+          const hum =  item.payload.humidity || 0;
+
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${time}</td><td>${temp}</td><td>${hum}</td>`;
+          document.getElementById("dataTable").appendChild(row);
+
+          tempChart.data.labels.push(time);
+          tempChart.data.datasets[0].data.push(temp);
+          humChart.data.labels.push(time);
+          humChart.data.datasets[0].data.push(hum);
+        });
+
+        tempChart.update();
+        humChart.update();
+      })
+      .catch(err => console.error("❌ Error loading data:", err));
+  }
+
+  function toggleDropdown() {
+    document.querySelector('.menu').classList.toggle('active');
+  }
+
+  function logout() {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  function goToDashboard() {
+    window.location.href = "dashboard.html";
+  }
+
+  function toggleTheme() {
+    darkMode = !darkMode;
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+    applyTheme();
+  }
+
+  function applyTheme() {
+    document.body.style.background = darkMode ? "linear-gradient(to right, #0AFFEF, #A7C7E7)" : "#e0f7fa";
+    document.body.style.color = darkMode ? "#0AFFEF" : "#000000";
+    document.querySelectorAll("table, .chart-card, .topbar, .modal-content").forEach(el => {
+      if (!el) return;
+      el.style.background = darkMode ? "#2c2c3a" : "#ffffff";
+      el.style.color = darkMode ? "#ffffff" : "#000000";
+    });
+  }
+
+  function toggleRealtime() {
+    const section = document.getElementById("chartsSection");
+    section.style.display = section.style.display === "none" ? "flex" : "none";
+  }
+
+  function showChangePassword() {
+    document.getElementById("passwordModal").style.display = "flex";
+  }
+
+  function closeModal() {
+    document.getElementById("passwordModal").style.display = "none";
+  }
+
+  function saveNewPassword() {
+    const uname = document.getElementById("cp-username").value.trim();
+    const oldpass = document.getElementById("cp-oldpass").value;
+    const newpass = document.getElementById("cp-newpass").value;
+    const storedUser = localStorage.getItem("username");
+    const savedPass = localStorage.getItem("password") || "1234";
+
+    if (uname !== storedUser) return alert("❌ Wrong username");
+    if (oldpass !== savedPass) return alert("❌ Old password incorrect");
+    if (!newpass) return alert("⚠️ New password cannot be empty");
+
+    localStorage.setItem("password", newpass);
+    alert("✅ Password changed. Please log in again.");
+    logout();
+  }
+</script>
+</body>
+</html>
