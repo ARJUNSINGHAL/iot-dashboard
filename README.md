@@ -45,7 +45,5 @@ A modern, responsive IoT dashboard web application that shows real-time temperat
 ![IoT Dashboard](https://via.placeholder.com/800x400.png?text=IoT+Dashboard+Preview)
 
 ---
-
-## 📜 License
-
-This project is open source and available under the [MIT License](LICENSE).
+Url:-
+https://www.mydashboardiot.in
